@@ -60,6 +60,12 @@ require('mason-lspconfig').setup_handlers {
   end,
 }
 
+require'lspconfig'.bashls.setup{
+  cmd = { "bash-language-server", "start" },
+  filetypes = { "sh", "bash", "zsh", "def" },
+  root_dir = require'lspconfig'.util.find_git_ancestor,
+}
+
 -- LSP診断メッセージのアイコン設定
 --for type, icon in pairs { Error = '🚒', Warn = '🚧', Hint = '🦒', Info = '👀' } do
 --  local hl = 'DiagnosticSign' .. type
