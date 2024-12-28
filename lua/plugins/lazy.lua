@@ -37,13 +37,6 @@ return {
   -- Denops (Denoプラグイン)
   { "vim-denops/denops.vim" },
 
-  -- ddc (補完プラグイン)
-  --{ "Shougo/ddc.vim", event = "InsertEnter" },
-  --{ "Shougo/ddc-source-around", dependencies = { "Shougo/ddc.vim" } },
-  --{ "Shougo/ddc-filter-matcher_head", dependencies = { "Shougo/ddc.vim" } },
-  --{ "Shougo/ddc-filter-sorter_rank", dependencies = { "Shougo/ddc.vim" } },
---  {
-    --
   {
     "williamboman/mason.nvim",
     build = ":MasonUpdate",  -- Masonのアップデートを自動実行
