@@ -42,3 +42,5 @@ end
 -- タブ補完のキー設定
 vim.api.nvim_set_keymap('i', '<Tab>', 'v:lua.tab_complete()', { expr = true, noremap = true })
 vim.api.nvim_set_keymap('i', '<S-Tab>', 'v:lua.s_tab_complete()', { expr = true, noremap = true })
+
+

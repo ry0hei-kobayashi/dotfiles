@@ -70,6 +70,111 @@ return {
     require("mini.cursorword").setup()
     require("mini.statusline").setup()
     require("mini.surround").setup()
-  end }
+  end },
+
+  {
+   "iamcco/markdown-preview.nvim",
+   ft = { "markdown" },
+   build = "cd app && npm install",
+   init = function()
+     vim.g.mkdp_auto_start = 1
+     vim.g.mkdp_auto_close = 1
+     vim.g.mkdp_open_to_the_world = 0
+   end,
+   keys = {
+     { "<leader>mp", "<cmd>MarkdownPreview<CR>",     desc = "Preview Markdown" },
+     { "<leader>ms", "<cmd>MarkdownPreviewStop<CR>", desc = "Stop Preview" },
+   },
+
+   {
+    "hrsh7th/nvim-cmp",
+   },
+
+  {
+   "github/copilot.vim", lazy=false
+  },
+
+  {
+  "zbirenbaum/copilot.lua",
+  cmd = "Copilot",
+  config = function()
+    require("copilot").setup({
+      suggestion = {enabled = false},
+      panel = {enabled = false},
+      copilot_node_command = 'node'
+    })
+  end,
+  },
+
+  {
+  "zbirenbaum/copilot-cmp",
+  config = function ()
+    require("copilot_cmp").setup()
+  end
+  },
+
+  {
+    "CopilotC-Nvim/CopilotChat.nvim",
+    branch = "canary",
+    dependencies = {
+      { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
+      { "nvim-lua/plenary.nvim" }, -- for curl, log wrapper
+    },
+    build = "make tiktoken", -- Only on MacOS or Linux
+    opts = {
+      debug = true, -- Enable debugging
+      -- See Configuration section for rest
+    },
+    -- See Commands section for default commands if you want to lazy load on them
+  },
+
+  {
+    "ysmb-wtsg/in-and-out.nvim",
+    keys = {
+      {
+      "<C-CR>",
+        function()
+        require("in-and-out").in_and_out()
+        end,
+        mode = "i"
+      },
+    },
+  },
+
+  {
+    "cohama/lexima.vim",
+    event = "InsertEnter",
+  },
+
+  {
+    "JoosepAlviste/nvim-ts-context-commentstring"
+  },
+
+  {
+    "yuki-yano/fuzzy-motion.vim",
+    dependencies = { "lambdalisue/vim-kensaku" },
+    cmd = { "FuzzyMotion" },
+  },
+  {
+    "lambdalisue/vim-kensaku-search",
+    dependencies = { "lambdalisue/vim-kensaku" },
+    event = "VeryLazy",
+  },
+  {
+    "lambdalisue/vim-kensaku",
+    event = "VeryLazy",
+  },
+  {
+    "haya14busa/vim-edgemotion",
+    event = "VeryLazy",
+  },
+
+
+
+
+
+ },
+
 }
+
 
