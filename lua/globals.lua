@@ -18,6 +18,9 @@ vim.g.loaded_rrhelper = 1
 vim.g.loaded_netrwPlugin = 1
 vim.g.mapleader = ' '
 
+vim.opt.shortmess:append("I") -- 起動時メッセージ抑制
+vim.opt.cmdheight = 1         -- コマンドラインの高さ（できれば1以上に）
+
 -- setting
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
