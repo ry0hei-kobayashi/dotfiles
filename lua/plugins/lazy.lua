@@ -1,4 +1,6 @@
 return {
+
+
   -- NERDTree (ファイラ)
   { "preservim/nerdtree", cmd = "NERDTreeToggle" },
 
@@ -54,15 +56,17 @@ return {
     end,
   },
 
-  {
-    "neovim/nvim-lspconfig",
-    config = function()
-      local lspconfig = require("lspconfig")
-      lspconfig.lua_ls.setup({})
-      lspconfig.pyright.setup({})
-      lspconfig.ts_ls.setup({})
-    end,
-  },
+{ "neovim/nvim-lspconfig" },
+
+--  {
+--    "neovim/nvim-lspconfig",
+--    config = function()
+--      local lspconfig = require("lspconfig")
+--      lspconfig.lua_ls.setup({})
+--      lspconfig.pyright.setup({})
+--      lspconfig.ts_ls.setup({})
+--    end,
+--  },
 
   -- mini.nvim (軽量プラグイン群)
   { "echasnovski/mini.nvim", config = function()
@@ -171,6 +175,19 @@ return {
   },
 
 
+    {
+      "jackMort/ChatGPT.nvim",
+        event = "VeryLazy",
+        config = function()
+          require("chatgpt").setup()
+        end,
+        dependencies = {
+          "MunifTanjim/nui.nvim",
+          "nvim-lua/plenary.nvim",
+          "folke/trouble.nvim",
+          "nvim-telescope/telescope.nvim"
+        }
+    }
 
 
 

@@ -174,9 +174,11 @@ later(function()
     vim.keymap.set('n', '<Leader><Leader>', '<Cmd>LazyGit<Cr>', opts)
 end)
 
-later(function()
+now(function()
   add('https://github.com/nvim-treesitter/nvim-treesitter')
+end)
 
+later(function()
   require('nvim-treesitter.configs').setup {
     ensure_installed = {
       'astro',
@@ -219,136 +221,6 @@ later(function()
   }
 end)
 
-later(function()
-    add('https://github.com/williamboman/mason.nvim')
-end)
-
-later(function()
-    add('https://github.com/neovim/nvim-lspconfig')
-end)
-
-later(function()
-    add {
-        source = 'https://github.com/williamboman/mason-lspconfig.nvim',
-        depends = {
-            'https://github.com/williamboman/mason.nvim',
-            'https://github.com/neovim/nvim-lspconfig'
-        },
-    }
-
-    require('mason').setup()
-    local lspconfig = require('lspconfig')
-    local capabilities = vim.lsp.protocol.make_client_capabilities()
-
-    -- C/C++ (clangd)
-    lspconfig.clangd.setup {
-      capabilities = capabilities,
-    }
-
-    -- Dockerfile
-    lspconfig.dockerls.setup {
-      capabilities = capabilities,
-    }
-
-    -- Bash (ROS, Shell)
-    lspconfig.bashls.setup {
-      capabilities = capabilities,
-    }
-
-    capabilities.textDocument.foldingRange = {
-        dynamicRegistration = false,
-        lineFoldingOnly = true,
-    }
-
-    require('mason-lspconfig').setup {
-        ensure_installed = {
-            'astro',
-            'biome',
-            'denols',
-            'gopls',
-            'lua_ls',
-            'svelte',
-            'unocss',
-            'vtsls',
-        },
-    }
-
-    require('mason-lspconfig').setup_handlers {
-        function(server_name)
-            lspconfig[server_name].setup {
-                capabilities = capabilities,
-            }
-        end,
-        ['denols'] = function()
-            lspconfig['denols'].setup {
-                capabilities = capabilities,
-                root_dir = lspconfig.util.root_pattern('deno.json', 'deno.jsonc', 'deps.ts', 'import_map.json'),
-                init_options = {
-                    lint = true,
-                    unstable = true,
-                    suggest = {
-                        imports = {
-                            hosts = {
-                                ['https://deno.land'] = true,
-                                ['https://cdn.nest.land'] = true,
-                                ['https://crux.land'] = true,
-                            },
-                        },
-                    },
-                },
-            }
-        end,
-        ['vtsls'] = function()
-            local is_node = require('lspconfig').util.find_node_modules_ancestor('.')
-            if is_node then
-                lspconfig['vtsls'].setup {
-                    capabilities = capabilities,
-                }
-            end
-        end,
-        ['lua_ls'] = function()
-            lspconfig['lua_ls'].setup {
-                capabilities = capabilities,
-                settings = {
-                    Lua = {
-                        runtime = {
-                            version = 'LuaJIT',
-                            pathStrict = true,
-                            path = { '?.lua', '?/init.lua' },
-                        },
-                        completion = { callSnippet = 'Both' },
-                        diagnostics = { globals = { 'vim' } },
-                        telemetry = { enable = false },
-                        workspace = {
-                            library = vim.list_extend(vim.api.nvim_get_runtime_file('lua', true), {
-                                '${3rd}/luv/library',
-                                '${3rd}/busted/library',
-                                '${3rd}/luassert/library',
-                                vim.api.nvim_get_runtime_file('', true),
-                            }),
-                            checkThirdParty = 'Disable',
-                        },
-                    },
-                },
-            }
-        end,
-    }
-
-    for type, icon in pairs {
-        Error = 'E',
-        Warn = 'W',
-        Hint = 'H',
-        Info = 'I',
-    } do
-        local hl = 'DiagnosticSign' .. type
-        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-    end
-    vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(vim.lsp.handlers.hover, { border = 'single' })
-
-    vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
-        virtual_text = false,
-    })
-end)
 
 later(function()
     add {

@@ -19,6 +19,7 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup("plugins.lazy")
 
 require('plugins.mini')  
+
 --require('plugins.telescope')
 require('plugins.lsp')
 require('plugins.toggleterm')
