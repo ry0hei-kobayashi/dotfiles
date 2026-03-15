@@ -1,106 +1,131 @@
--- ~/.config/nvim/lua/plugins/lsp.lua
+return {
+  {
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
+    dependencies = {
+      "williamboman/mason.nvim",
+      "hrsh7th/cmp-nvim-lsp",
+    },
+    config = function()
+      require("mason").setup()
 
--- Mason (installer)
-require('mason').setup()
+      local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-require('mason-lspconfig').setup {
-  ensure_installed = { 'lua_ls', 'gopls', 'denols', 'bashls', 'pyright' },
+      local on_attach = function(_, bufnr)
+        local map = function(lhs, rhs, desc)
+          vim.keymap.set("n", lhs, rhs, {
+            buffer = bufnr,
+            silent = true,
+            noremap = true,
+            desc = desc,
+          })
+        end
+
+        -- 最低限だけ残す
+        map("[d", vim.diagnostic.goto_prev, "Prev diagnostic")
+        map("]d", vim.diagnostic.goto_next, "Next diagnostic")
+
+        map("<leader>e", function()
+          vim.diagnostic.open_float(0, {
+            focus = false,
+            scope = "line",
+            border = "rounded",
+            source = "if_many",
+            close_events = {
+              "BufLeave",
+              "CursorMoved",
+              "InsertEnter",
+              "FocusLost",
+            },
+          })
+        end, "Line diagnostics")         
+
+      end
+
+      vim.diagnostic.config({
+        virtual_text = false,
+        signs = true,
+        underline = true,
+        update_in_insert = false,
+        severity_sort = true,
+        float = {
+          border = "rounded",
+          source = "if_many",
+        },
+      })
+
+      vim.lsp.config("*", {
+        capabilities = capabilities,
+        root_markers = { ".git" },
+      })
+
+      vim.lsp.config("clangd", {
+        on_attach = on_attach,
+        cmd = {
+          "clangd",
+          "--background-index",
+          "--clang-tidy",
+          "--completion-style=detailed",
+          "--header-insertion=iwyu",
+          "--limit-references=0",
+        },
+        root_markers = {
+          ".clangd",
+          "compile_commands.json",
+          "compile_flags.txt",
+          "package.xml",
+          "colcon.pkg",
+          ".git",
+        },
+      })
+
+      vim.lsp.config("pyright", {
+        on_attach = on_attach,
+        root_markers = {
+          "pyproject.toml",
+          "setup.py",
+          "setup.cfg",
+          "requirements.txt",
+          ".git",
+        },
+      })
+
+      vim.lsp.config("lua_ls", {
+        on_attach = on_attach,
+        settings = {
+          Lua = {
+            diagnostics = {
+              globals = { "vim" },
+            },
+            workspace = {
+              checkThirdParty = false,
+              library = {
+                vim.env.VIMRUNTIME,
+              },
+            },
+          },
+        },
+        root_markers = {
+          ".luarc.json",
+          ".luarc.jsonc",
+          ".git",
+        },
+      })
+
+      vim.lsp.config("bashls", {
+        on_attach = on_attach,
+        filetypes = { "sh", "bash", "zsh", "def" },
+        root_markers = {
+          ".git",
+          ".bashrc",
+          ".bash_profile",
+        },
+      })
+
+      vim.lsp.enable("clangd")
+      vim.lsp.enable("pyright")
+      vim.lsp.enable("lua_ls")
+      vim.lsp.enable("bashls")
+    end,
+  },
 }
-
-local util = require('lspconfig').util
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-
--- =========================
--- LSP server configs (nvim 0.11 style)
--- =========================
-
--- Lua
-vim.lsp.config("lua_ls", {
-  capabilities = capabilities,
-  settings = {
-    Lua = {
-      diagnostics = {
-        globals = { 'vim' },
-      },
-    },
-  },
-})
-
--- Go
-vim.lsp.config("gopls", {
-  capabilities = capabilities,
-  cmd = { 'gopls' },
-  settings = {
-    gopls = {
-      analyses = {
-        unusedparams = true,
-      },
-      staticcheck = true,
-    },
-  },
-})
-
--- Deno
-vim.lsp.config("denols", {
-  capabilities = capabilities,
-  root_dir = util.root_pattern("deno.json", "deno.jsonc"),
-  init_options = {
-    lint = true,
-  },
-})
-
--- Bash
-vim.lsp.config("bashls", {
-  cmd = { "bash-language-server", "start" },
-  filetypes = { "sh", "bash", "zsh", "def" },
-  root_dir = util.find_git_ancestor,
-})
-
--- Pyright
-vim.lsp.config("pyright", {
-  capabilities = capabilities,
-  settings = {
-    python = {
-      analysis = {
-        typeCheckingMode = "basic",      -- "off" | "basic" | "strict"
-        autoSearchPaths = true,
-        useLibraryCodeForTypes = true,
-        diagnosticMode = "openFilesOnly" -- 重ければ openFilesOnly、全体なら "workspace"
-      },
-    },
-  },
-})
-
--- Enable servers
-vim.lsp.enable({ "lua_ls", "gopls", "denols", "bashls", "pyright" })
-
--- =========================
--- Diagnostics UI
--- =========================
-for type, icon in pairs { Error = 'E', Warn = 'W', Hint = 'H', Info = 'I' } do
-  local hl = 'DiagnosticSign' .. type
-  vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-end
-
-vim.api.nvim_create_autocmd("CursorHold", {
-  callback = function()
-    vim.diagnostic.open_float(nil, { focusable = false })
-  end,
-})
-
--- =========================
--- Keymaps on attach
--- =========================
-vim.api.nvim_create_autocmd('LspAttach', {
-  callback = function(args)
-    local bufnr = args.buf
-    local bufopts = { noremap = true, silent = true, buffer = bufnr }
-
-    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
-    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
-    vim.keymap.set('n', 'gr', vim.lsp.buf.references, bufopts)
-    vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, bufopts)
-    vim.keymap.set('n', 'K',  vim.lsp.buf.hover, bufopts)
-  end
-})
-
