@@ -79,16 +79,69 @@ return {
         },
       })
 
-      vim.lsp.config("pyright", {
+      vim.lsp.config("ruff", {
         on_attach = on_attach,
+        cmd = { "ruff", "server" },
+        filetypes = { "python" },
         root_markers = {
           "pyproject.toml",
+          "ruff.toml",
+          ".ruff.toml",
           "setup.py",
           "setup.cfg",
           "requirements.txt",
+          "package.xml",
           ".git",
         },
+        init_options = {
+          settings = {
+            configuration = {
+              preview = true,
+              ["line-length"] = 100,
+      
+              lint = {
+                select = {
+                  "E",
+                  "W",
+                  "F",
+                  "I",
+                  "D",
+                },
+                ignore = {
+                  "E203",
+                  "D100",
+                  "D103",
+                  "D105",
+                  "D107",
+                  "D203",
+                  "D212",
+                  "D401",
+                },
+                pydocstyle = {
+                  convention = "google",
+                },
+              },
+      
+              format = {
+                ["quote-style"] = "single",
+                ["indent-style"] = "space",
+                ["line-ending"] = "auto",
+              },
+            },
+          },
+        },
       })
+
+      -- vim.lsp.config("pyright", {
+      --   on_attach = on_attach,
+      --   root_markers = {
+      --     "pyproject.toml",
+      --     "setup.py",
+      --     "setup.cfg",
+      --     "requirements.txt",
+      --     ".git",
+      --   },
+      -- })
 
       vim.lsp.config("lua_ls", {
         on_attach = on_attach,
@@ -123,7 +176,8 @@ return {
       })
 
       vim.lsp.enable("clangd")
-      vim.lsp.enable("pyright")
+      vim.lsp.enable("ruff")
+      -- vim.lsp.enable("pyright")
       vim.lsp.enable("lua_ls")
       vim.lsp.enable("bashls")
     end,

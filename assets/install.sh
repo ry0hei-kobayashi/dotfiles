@@ -104,7 +104,7 @@ npm install -g @vtsls/language-server
 
 echo "Installing python formatters..."
 
-pip install --user autopep8 isort --break-system-packages
+pip install --user autopep8 isort ruff --break-system-packages
 
 ################################
 # alias
