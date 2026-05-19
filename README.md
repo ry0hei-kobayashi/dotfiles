@@ -15,30 +15,35 @@
 - ROS support: `taDachs/ros-nvim`
 - AI: `zbirenbaum/copilot.lua`, `CopilotC-Nvim/CopilotChat.nvim`, `jackMort/ChatGPT.nvim`
 
-## Recommended system packages
+## Prerequisites
 
-Ubuntu example:
+The bundled `assets/install.sh` handles Neovim, Node, Go, Deno, ripgrep, fd, gopls, vtsls, Mason LSPs (lua-language-server, bash-language-server, lemminx) and Python formatters — all under `$HOME/.local`, no sudo required.
+
+You only need to ensure the **host C compiler and Python 3** are available before running it:
+
+### Ubuntu (root available)
 
 ```bash
 sudo apt update
-sudo apt install -y neovim git curl ripgrep fd-find build-essential cmake npm python3-pip luarocks
-```
-
-For language servers / tools:
-
-```bash
-npm install -g pyright bash-language-server vscode-langservers-extracted @olrtg/emmet-language-server
-pip install pynvim
-```
-
-For C/C++:
-
-```bash
+sudo apt install -y git curl build-essential python3 python3-pip
+# Optional: clangd/clang-format for C/C++ (Mason can also install clangd).
 sudo apt install -y clangd clang-format
 ```
 
-For XML:
-- install `lemminx` via `:Mason`
+### Ubuntu / HPC (no root)
+
+Use the cluster's module system:
+
+```bash
+module load gcc python
+# or whatever your site provides
+```
+
+### macOS
+
+```bash
+xcode-select --install   # C/C++ toolchain (clang, clang-format)
+```
 
 ## ROS notes
 
@@ -116,6 +121,30 @@ Copy the directory to:
 ~/.config/nvim
 ```
 
+### Bundled installer
+
+`assets/install.sh` provisions Neovim, Node.js, Go, Deno, ripgrep, fd, gopls, vtsls, and Python formatters under `$HOME/.local`. It auto-detects Linux/macOS and arch (x86_64 / arm64):
+
+```bash
+cd assets
+./install.sh
+```
+
+Everything is installed under `$HOME/.local` (no root / sudo required) — suitable for HPC and shared-machine setups. Neovim is fetched as a tarball from the official GitHub release (no AppImage / FUSE dependency). PATH / alias lines are appended to `~/.bashrc` on Linux and `~/.zshrc` on macOS.
+
+The installer also drops a shell function so that `sudo nvim FILE` transparently rewrites to `sudoedit FILE` (with `EDITOR=~/.local/bin/nvim`). This lets you edit root-owned files using your user-level Neovim install — the file is opened as your user (config / plugins / undo state stay under `$HOME`) and only the write back to disk goes through root.
+
+Prerequisites the installer does **not** install (it warns if they are missing):
+
+- `cc` (C compiler) — needed for Treesitter parser compilation and CopilotChat's tiktoken build.
+- `python3` + `pip3` — needed for installing ruff / isort / autopep8.
+
+On Ubuntu: `sudo apt install build-essential python3 python3-pip`.
+On HPC: `module load gcc python` (or equivalent).
+On macOS: `xcode-select --install`.
+
+### Plugin / parser setup
+
 Then start Neovim and run:
 
 ```vim
@@ -128,3 +157,4 @@ Install Treesitter parsers if needed:
 ```vim
 :TSInstall cpp python lua markdown yaml json xml ros
 ```
+

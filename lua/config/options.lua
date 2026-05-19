@@ -117,20 +117,46 @@ vim.keymap.set("n", "<Esc><Esc>", "<cmd>nohlsearch<CR><Esc>", {
 -- =========================================================
 -- IME off on InsertLeave
 -- =========================================================
-if vim.fn.executable("ibus") == 1 then
-    vim.api.nvim_create_autocmd("InsertLeave", {
-        callback = function()
-            vim.fn.jobstart({ "ibus", "engine", "xkb:us::eng" }, { detach = true })
-        end,
-    })
-end
+-- Linux: ibus / fcitx have their own remote CLIs.
+-- macOS: needs a small helper that talks to TIS (Text Input Source);
+--        `macism` (brew) or `im-select` (brew tap) both work. We pick
+--        whichever is on PATH, falling back to no-op silently if neither
+--        is installed.
+local sysname = vim.loop.os_uname().sysname
 
-if vim.fn.executable("fcitx-remote") == 1 then
-    vim.api.nvim_create_autocmd("InsertLeave", {
-        callback = function()
-            vim.fn.jobstart({ "fcitx-remote", "-c" }, { detach = true })
-        end,
-    })
+if sysname == "Linux" then
+    if vim.fn.executable("ibus") == 1 then
+        vim.api.nvim_create_autocmd("InsertLeave", {
+            callback = function()
+                vim.fn.jobstart({ "ibus", "engine", "xkb:us::eng" }, { detach = true })
+            end,
+        })
+    end
+
+    if vim.fn.executable("fcitx-remote") == 1 then
+        vim.api.nvim_create_autocmd("InsertLeave", {
+            callback = function()
+                vim.fn.jobstart({ "fcitx-remote", "-c" }, { detach = true })
+            end,
+        })
+    end
+elseif sysname == "Darwin" then
+    -- `com.apple.keylayout.US` is the standard US keyboard layout, which is
+    -- always enabled when the system has been set up in English. `ABC` is
+    -- a different layout and may not be enabled in System Settings.
+    local ime_cmd = nil
+    if vim.fn.executable("macism") == 1 then
+        ime_cmd = { "macism", "com.apple.keylayout.US" }
+    elseif vim.fn.executable("im-select") == 1 then
+        ime_cmd = { "im-select", "com.apple.keylayout.US" }
+    end
+    if ime_cmd then
+        vim.api.nvim_create_autocmd("InsertLeave", {
+            callback = function()
+                vim.fn.jobstart(ime_cmd, { detach = true })
+            end,
+        })
+    end
 end
 
 -- =========================================================

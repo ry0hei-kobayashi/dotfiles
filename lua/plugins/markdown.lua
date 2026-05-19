@@ -8,7 +8,10 @@ return {
       vim.g.mkdp_auto_start = 1
       vim.g.mkdp_auto_close = 1
       vim.g.mkdp_open_to_the_world = 0
-      --vim.g.mkdp_browser = "xdg-open"
+      -- Leave mkdp_browser unset on macOS: the plugin's opener.js detects
+      -- darwin and calls `open <url>` itself. Setting it to "open" produces
+      -- `open -a open <url>` (invalid). On Linux, mkdp uses xdg-open by
+      -- default too — only override if you want a specific browser binary.
       vim.g.mkdp_echo_preview_url = 1
       vim.g.mkdp_filetypes = { "markdown" }
     end,
