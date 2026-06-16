@@ -175,11 +175,39 @@ return {
         },
       })
 
+      vim.lsp.config("gopls", {
+        on_attach = on_attach,
+        filetypes = { "go", "gomod", "gowork", "gotmpl" },
+        root_markers = {
+          "go.work",
+          "go.mod",
+          ".git",
+        },
+      })
+
+      vim.lsp.config("vtsls", {
+        on_attach = on_attach,
+        filetypes = {
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+        },
+        root_markers = {
+          "tsconfig.json",
+          "package.json",
+          "jsconfig.json",
+          ".git",
+        },
+      })
+
       vim.lsp.enable("clangd")
       vim.lsp.enable("ruff")
       -- vim.lsp.enable("pyright")
       vim.lsp.enable("lua_ls")
       vim.lsp.enable("bashls")
+      vim.lsp.enable("gopls")
+      vim.lsp.enable("vtsls")
     end,
   },
 }
