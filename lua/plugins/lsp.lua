@@ -4,10 +4,33 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       "williamboman/mason.nvim",
+      "WhoIsSethDaniel/mason-tool-installer.nvim",
       "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
       require("mason").setup()
+
+      -- Install all language servers / formatters via Mason on first launch.
+      -- (install.sh only provides the runtimes Mason depends on.)
+      require("mason-tool-installer").setup({
+        ensure_installed = {
+          "lua-language-server",
+          "clangd",
+          "gopls",
+          "bash-language-server",
+          "vtsls",
+          "ruff",
+          "json-lsp",
+          "yaml-language-server",
+          "lemminx",
+          "stylua",
+          "shfmt",
+          "prettier",
+          "clang-format",
+          "cmakelang",
+        },
+        run_on_start = true,
+      })
 
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
@@ -22,11 +45,15 @@ return {
         end
 
         -- 最低限だけ残す
-        map("[d", vim.diagnostic.goto_prev, "Prev diagnostic")
-        map("]d", vim.diagnostic.goto_next, "Next diagnostic")
+        map("[d", function()
+          vim.diagnostic.jump({ count = -1, float = true })
+        end, "Prev diagnostic")
+        map("]d", function()
+          vim.diagnostic.jump({ count = 1, float = true })
+        end, "Next diagnostic")
 
         map("<leader>e", function()
-          vim.diagnostic.open_float(0, {
+          vim.diagnostic.open_float({
             focus = false,
             scope = "line",
             border = "rounded",
@@ -132,17 +159,6 @@ return {
         },
       })
 
-      -- vim.lsp.config("pyright", {
-      --   on_attach = on_attach,
-      --   root_markers = {
-      --     "pyproject.toml",
-      --     "setup.py",
-      --     "setup.cfg",
-      --     "requirements.txt",
-      --     ".git",
-      --   },
-      -- })
-
       vim.lsp.config("lua_ls", {
         on_attach = on_attach,
         settings = {
@@ -175,11 +191,59 @@ return {
         },
       })
 
+      vim.lsp.config("gopls", {
+        on_attach = on_attach,
+        filetypes = { "go", "gomod", "gowork", "gotmpl" },
+        root_markers = {
+          "go.work",
+          "go.mod",
+          ".git",
+        },
+      })
+
+      vim.lsp.config("vtsls", {
+        on_attach = on_attach,
+        filetypes = {
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+        },
+        root_markers = {
+          "tsconfig.json",
+          "package.json",
+          "jsconfig.json",
+          ".git",
+        },
+      })
+
+      vim.lsp.config("jsonls", {
+        on_attach = on_attach,
+        filetypes = { "json", "jsonc" },
+        root_markers = { ".git" },
+      })
+
+      vim.lsp.config("yamlls", {
+        on_attach = on_attach,
+        filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab" },
+        root_markers = { ".git" },
+      })
+
+      vim.lsp.config("lemminx", {
+        on_attach = on_attach,
+        filetypes = { "xml", "xsd", "xsl", "xslt", "svg" },
+        root_markers = { ".git", "package.xml" },
+      })
+
       vim.lsp.enable("clangd")
       vim.lsp.enable("ruff")
-      -- vim.lsp.enable("pyright")
       vim.lsp.enable("lua_ls")
       vim.lsp.enable("bashls")
+      vim.lsp.enable("gopls")
+      vim.lsp.enable("vtsls")
+      vim.lsp.enable("jsonls")
+      vim.lsp.enable("yamlls")
+      vim.lsp.enable("lemminx")
     end,
   },
 }
