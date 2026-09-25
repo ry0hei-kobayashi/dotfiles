@@ -13,8 +13,10 @@ mkdir -p "$PREFIX/nodejs"
 # PATH setup
 ################################
 
+touch "$HOME/.bashrc"
+
 add_to_bashrc() {
-    if ! grep -q "$1" "$HOME/.bashrc"; then
+    if ! grep -qF "$1" "$HOME/.bashrc"; then
         echo "$1" >> "$HOME/.bashrc"
     fi
 }
@@ -22,6 +24,10 @@ add_to_bashrc() {
 add_to_bashrc 'export PATH="$HOME/.local/bin:$PATH"'
 add_to_bashrc 'export PATH="$HOME/.local/go/bin:$PATH"'
 add_to_bashrc 'export PATH="$HOME/go/bin:$PATH"'
+
+# The lines above only affect *future* shells. Export the same PATH for this
+# script so the tools installed below are found without a shell restart.
+export PATH="$BIN:$PREFIX/go/bin:$HOME/go/bin:$PATH"
 
 ################################
 # Neovim
@@ -100,7 +106,7 @@ ln -sf "$NODE_DIR/bin/node" "$BIN/node"
 ln -sf "$NODE_DIR/bin/npm" "$BIN/npm"
 ln -sf "$NODE_DIR/bin/npx" "$BIN/npx"
 
-node -v
+"$BIN/node" -v
 
 ################################
 # Deno
@@ -108,9 +114,13 @@ node -v
 
 echo "Installing Deno..."
 
-if [ ! -f "$HOME/.local/bin/deno" ]; then
-    curl -fsSL https://deno.land/install.sh | DENO_INSTALL="$PREFIX" sh
+if [ ! -x "$BIN/deno" ]; then
+    # -y skips the installer's interactive shell-setup prompt (it would block
+    # waiting on /dev/tty); --no-modify-path because PATH is handled above.
+    curl -fsSL https://deno.land/install.sh | DENO_INSTALL="$PREFIX" sh -s -- -y --no-modify-path
 fi
+
+"$BIN/deno" --version | head -n 1
 
 ################################
 # Go
@@ -126,9 +136,7 @@ if [ ! -d "$PREFIX/go" ]; then
     tar -C "$PREFIX" -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
 fi
 
-export PATH="$PREFIX/go/bin:$PATH"
-
-go version
+"$PREFIX/go/bin/go" version
 
 ################################
 # LSP servers & formatters (managed by Mason)
@@ -148,6 +156,36 @@ go version
 echo "LSP servers / formatters are handled by Mason on first Neovim launch."
 
 ################################
+# Neovim config -> ~/.config/nvim
+################################
+
+# Copy this repository's Neovim configuration into place so it is usable
+# immediately after the install. An existing config is moved aside first.
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+NVIM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+NVIM_CONFIG_BACKUP=""
+CONFIG_ENTRIES="init.lua filetype.vim lazy-lock.json lua ftdetect syntax"
+
+echo "Installing Neovim config to $NVIM_CONFIG..."
+
+if [ -e "$NVIM_CONFIG" ] && [ "$(cd "$NVIM_CONFIG" 2>/dev/null && pwd -P)" = "$(cd "$REPO_DIR" && pwd -P)" ]; then
+    # ~/.config/nvim *is* this repository (clone or symlink): nothing to copy.
+    echo "$NVIM_CONFIG already points at this repository; skipping copy."
+else
+    if [ -e "$NVIM_CONFIG" ] || [ -L "$NVIM_CONFIG" ]; then
+        NVIM_CONFIG_BACKUP="${NVIM_CONFIG}.bak.$(date +%Y%m%d-%H%M%S)"
+        mv "$NVIM_CONFIG" "$NVIM_CONFIG_BACKUP"
+        echo "Existing config moved to $NVIM_CONFIG_BACKUP"
+    fi
+    mkdir -p "$NVIM_CONFIG"
+    for entry in $CONFIG_ENTRIES; do
+        cp -R "$REPO_DIR/$entry" "$NVIM_CONFIG/"
+    done
+    echo "Copied: $CONFIG_ENTRIES"
+fi
+
+################################
 # alias
 ################################
 
@@ -159,6 +197,10 @@ add_to_bashrc "alias vim='nvim'"
 
 echo ""
 echo "Installation complete"
+echo "Neovim config: $NVIM_CONFIG"
+if [ -n "$NVIM_CONFIG_BACKUP" ]; then
+    echo "Previous config backed up to: $NVIM_CONFIG_BACKUP"
+fi
 echo "Restart your shell or run:"
 echo "  source ~/.bashrc"
 echo ""

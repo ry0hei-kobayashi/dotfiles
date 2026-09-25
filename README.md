@@ -19,7 +19,11 @@
 
 `assets/install.sh` installs everything under `$HOME/.local` (no root required).
 It provides only the language runtimes — Neovim, Node.js, Go, Deno — because
-Mason cannot install those itself.
+Mason cannot install those itself. It then copies this repository's config
+(`init.lua`, `lua/`, `ftdetect/`, `syntax/`, `filetype.vim`, `lazy-lock.json`)
+into `~/.config/nvim` (or `$XDG_CONFIG_HOME/nvim`). An existing config is moved
+to `~/.config/nvim.bak.<timestamp>` first; if `~/.config/nvim` already *is* this
+repository (a clone or symlink), the copy is skipped.
 
 ```bash
 bash assets/install.sh
@@ -130,7 +134,8 @@ Other:
 
 ## Setup
 
-Place this directory at `~/.config/nvim`, then start Neovim. `lazy.nvim`
+`assets/install.sh` copies this directory to `~/.config/nvim` (you can also
+clone or symlink it there by hand). Then start Neovim. `lazy.nvim`
 bootstraps itself and installs the plugins; Mason installs the language
 servers and formatters (see [Installation](#installation)).
 
