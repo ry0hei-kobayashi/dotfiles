@@ -8,29 +8,68 @@
 
 ## Included features
 
-- LSP: `clangd`, `pyright`, `lua_ls`, `bashls`, `cmake`, `jsonls`, `yamlls`, `lemminx`
+- LSP: `clangd`, `ruff`, `lua_ls`, `bashls`, `gopls`, `vtsls`, `jsonls`, `yamlls`, `lemminx`
 - Markdown preview: `iamcco/markdown-preview.nvim`
 - Terminal: `akinsho/toggleterm.nvim`
 - File tree: `preservim/nerdtree`
 - ROS support: `taDachs/ros-nvim`
 - AI: `zbirenbaum/copilot.lua`, `CopilotC-Nvim/CopilotChat.nvim`, `jackMort/ChatGPT.nvim`
 
-## Prerequisites
+## Installation
 
-The bundled `assets/install.sh` handles Neovim, Node, Go, Deno, ripgrep, fd, gopls, vtsls, Mason LSPs (lua-language-server, bash-language-server, lemminx) and Python formatters — all under `$HOME/.local`, no sudo required.
+`assets/install.sh` installs everything under `$HOME/.local` (no root required),
+so it also suits HPC and shared-machine setups. It auto-detects the platform
+(Linux / macOS, x86_64 / arm64) and provides:
 
-You only need to ensure the **host C compiler and Python 3** are available before running it:
+- the language runtimes Mason cannot install itself: Neovim (pinned, fetched as
+  the official release tarball, no AppImage / FUSE dependency), Node.js, Go, Deno
+- `ripgrep` and `fd` for Telescope
 
-### Ubuntu (root available)
+It then copies this repository's config (`init.lua`, `lua/`, `ftdetect/`,
+`syntax/`, `filetype.vim`, `lazy-lock.json`) into `~/.config/nvim` (or
+`$XDG_CONFIG_HOME/nvim`). An existing config is moved to
+`~/.config/nvim.bak.<timestamp>` first; if `~/.config/nvim` already *is* this
+repository (a clone or symlink), the copy is skipped.
+
+```bash
+bash assets/install.sh
+source ~/.bashrc   # or ~/.zshrc if your login shell is zsh
+```
+
+PATH / alias lines are appended to the rc file of your login shell
+(`~/.zshrc` for zsh, `~/.bashrc` otherwise). The installer also drops a shell
+function so that `sudo nvim FILE` transparently rewrites to `sudoedit FILE`
+(with `EDITOR=~/.local/bin/nvim`): the file is opened as your user (config /
+plugins / undo state stay under `$HOME`) and only the write back goes through root.
+
+Language servers and formatters (`clangd`, `lua-language-server`, `gopls`,
+`bash-language-server`, `vtsls`, `ruff`, `json-lsp`, `yaml-language-server`,
+`lemminx`, `stylua`, `shfmt`, `prettier`, `clang-format`, `cmakelang`) are
+installed automatically by `mason.nvim` + `mason-tool-installer` on the first
+Neovim launch.
+
+After running the script:
+
+1. Launch Neovim. Mason starts downloading the tools in the background.
+2. Run `:Mason` to watch progress until all tools are installed.
+3. Restart Neovim.
+
+### Prerequisites (must already be present)
+
+`curl`, `tar`, `unzip`, `git`, `python3` / `pip`, and a C compiler. The C
+compiler is needed for Treesitter parser compilation and CopilotChat's tiktoken
+build; `python3` / `pip` for the pip-based Mason packages (`ruff`,
+`clang-format`, `cmakelang`). The installer warns if `cc` or `python3` is
+missing but continues.
+
+#### Ubuntu (root available)
 
 ```bash
 sudo apt update
-sudo apt install -y git curl build-essential python3 python3-pip
-# Optional: clangd/clang-format for C/C++ (Mason can also install clangd).
-sudo apt install -y clangd clang-format
+sudo apt install -y git curl unzip build-essential cmake python3 python3-pip
 ```
 
-### Ubuntu / HPC (no root)
+#### Ubuntu / HPC (no root)
 
 Use the cluster's module system:
 
@@ -39,11 +78,15 @@ module load gcc python
 # or whatever your site provides
 ```
 
-### macOS
+#### macOS
 
 ```bash
 xcode-select --install   # C/C++ toolchain (clang, clang-format)
 ```
+
+If a Homebrew Neovim is also installed, the installer warns that it may shadow
+`~/.local/bin/nvim`; remove it with `brew uninstall neovim` or make sure
+`~/.local/bin` comes first in `PATH`.
 
 ## ROS notes
 
@@ -97,64 +140,45 @@ Add it to `~/.bashrc` or `~/.zshrc` if you want it persistent.
 
 ## Keymaps
 
-- `<leader>e`: toggle NERDTree
-- `<leader>nf`: locate current file in NERDTree
-- `<leader>tt`: toggle terminal
-- `<leader>tf`: floating terminal
-- `<leader>mp`: markdown preview toggle
-- `gd`, `gr`, `K`: LSP navigation / hover
+Leader is `<Space>`.
+
+General / windows:
+
+- `<leader>w` / `<leader>q`: save / quit
+- `<C-h/j/k/l>`: move between windows
+- `<Esc>`: clear search highlight
+
+Files (Telescope):
+
+- `<leader>ff` / `<leader>fg` / `<leader>fb`: find files / live grep / buffers
+- `<leader>fh` / `<leader>fw` / `<leader>fr` / `<leader>fo`: help / grep word / resume / oldfiles
+
+LSP (lspsaga):
+
+- `gd` / `gD`: peek / goto definition
+- `gt` / `gT`: peek / goto type definition
+- `K`: hover doc
+- `gj` / `gk`: next / prev diagnostic jump
+- `[d` / `]d`: prev / next diagnostic
+- `<leader>e`: show line diagnostics (float)
 - `<leader>rn`: rename
-- `<leader>ca`: code action
-- `<leader>lf`: format
-- `<leader>tr`: ROS Telescope finder
-- `<leader>rol`: open included ROS launch file
-- `<leader>rdi`: show ROS interface definition
-- `<leader>aa`: open ChatGPT.nvim
-- `<leader>ac`: toggle Copilot Chat
-- `<leader>ap`: open Copilot panel
+- `<leader>f`: format (conform)
 
-## Install
+Other:
 
-Copy the directory to:
+- `<C-n>`: toggle NERDTree
+- `<C-t>`: toggle terminal (toggleterm); `<Esc>` leaves terminal mode
+- `<leader>mp` / `<leader>ms`: markdown preview toggle / stop
 
-```bash
-~/.config/nvim
-```
+## Setup
 
-### Bundled installer
-
-`assets/install.sh` provisions Neovim, Node.js, Go, Deno, ripgrep, fd, gopls, vtsls, and Python formatters under `$HOME/.local`. It auto-detects Linux/macOS and arch (x86_64 / arm64):
-
-```bash
-cd assets
-./install.sh
-```
-
-Everything is installed under `$HOME/.local` (no root / sudo required) — suitable for HPC and shared-machine setups. Neovim is fetched as a tarball from the official GitHub release (no AppImage / FUSE dependency). PATH / alias lines are appended to `~/.bashrc` on Linux and `~/.zshrc` on macOS.
-
-The installer also drops a shell function so that `sudo nvim FILE` transparently rewrites to `sudoedit FILE` (with `EDITOR=~/.local/bin/nvim`). This lets you edit root-owned files using your user-level Neovim install — the file is opened as your user (config / plugins / undo state stay under `$HOME`) and only the write back to disk goes through root.
-
-Prerequisites the installer does **not** install (it warns if they are missing):
-
-- `cc` (C compiler) — needed for Treesitter parser compilation and CopilotChat's tiktoken build.
-- `python3` + `pip3` — needed for installing ruff / isort / autopep8.
-
-On Ubuntu: `sudo apt install build-essential python3 python3-pip`.
-On HPC: `module load gcc python` (or equivalent).
-On macOS: `xcode-select --install`.
-
-### Plugin / parser setup
-
-Then start Neovim and run:
-
-```vim
-:Lazy sync
-:Mason
-```
+`assets/install.sh` copies this directory to `~/.config/nvim` (you can also
+clone or symlink it there by hand). Then start Neovim. `lazy.nvim`
+bootstraps itself and installs the plugins; Mason installs the language
+servers and formatters (see [Installation](#installation)).
 
 Install Treesitter parsers if needed:
 
 ```vim
-:TSInstall cpp python lua markdown yaml json xml ros
+:TSInstall cpp python lua markdown yaml json
 ```
-

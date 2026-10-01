@@ -69,17 +69,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     end,
 })
 
-vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*.py",
-  callback = function()
-    vim.lsp.buf.format({
-      async = false,
-      filter = function(client)
-        return client.name == "ruff"
-      end,
-    })
-  end,
-})
+-- Python formatting on save is handled by conform (ruff) in lua/plugins/format.lua.
 
 --vim.api.nvim_create_autocmd("VimEnter", {
 --  callback = function()
@@ -99,7 +89,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 --
 vim.api.nvim_create_autocmd("CursorHold", {
     callback = function()
-        vim.diagnostic.open_float(nil, {
+        vim.diagnostic.open_float({
             focus = false,
             scope = "cursor",
             border = "rounded",

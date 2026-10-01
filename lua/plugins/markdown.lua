@@ -3,7 +3,12 @@ return {
     "iamcco/markdown-preview.nvim",
     lazy = false,
     priority = 900,
-    build = "cd app && npm install",
+    -- Use the plugin's own installer (downloads a prebuilt server binary).
+    -- The old `cd app && npm install` rewrote app/yarn.lock, which made
+    -- lazy.nvim see local changes and refuse to update.
+    build = function()
+      vim.fn["mkdp#util#install"]()
+    end,
     init = function()
       vim.g.mkdp_auto_start = 1
       vim.g.mkdp_auto_close = 1
