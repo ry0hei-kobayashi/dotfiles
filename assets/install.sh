@@ -3,6 +3,17 @@ set -e
 
 echo "==== Neovim development environment installer ===="
 
+# Resolve the repository root *before* anything below changes directory
+# (the download steps `cd /tmp`). Done late, a relative script path such as
+# `bash install.sh` would be resolved against /tmp and yield "/" -> "//init.lua".
+if [ -z "${BASH_SOURCE[0]}" ] || [ ! -f "${BASH_SOURCE[0]}" ]; then
+    echo "ERROR: run this script from a checkout of the repository, e.g." >&2
+    echo "  bash assets/install.sh" >&2
+    echo "(piping it through bash is not supported: the config files must be copied from the repo)" >&2
+    exit 1
+fi
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+
 PREFIX="$HOME/.local"
 BIN="$PREFIX/bin"
 
@@ -162,7 +173,6 @@ echo "LSP servers / formatters are handled by Mason on first Neovim launch."
 # Copy this repository's Neovim configuration into place so it is usable
 # immediately after the install. An existing config is moved aside first.
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 NVIM_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
 NVIM_CONFIG_BACKUP=""
 CONFIG_ENTRIES="init.lua filetype.vim lazy-lock.json lua ftdetect syntax"
